@@ -1,0 +1,25 @@
+dist: trusty
+os: linux
+language: shell
+env:
+  global:
+    - DOCKER_IMAGE_TITLE=docker-builder-ci
+
+jobs:
+  include:
+    - stage: build docker image
+      script:
+      - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+      - docker build -t $DOCKER_IMAGE_TITLE .
+      - docker images
+      - docker tag $DOCKER_IMAGE_TITLE $DOCKER_USERNAME/$DOCKER_IMAGE_TITLE
+      - docker push $DOCKER_USERNAME/$DOCKER_IMAGE_TITLE
+    - stage: test
+      script:
+      - docker run --rm $DOCKER_USERNAME/$DOCKER_IMAGE_TITLE git --version
+      - docker run --rm $DOCKER_USERNAME/$DOCKER_IMAGE_TITLE node -v
+      - docker run --rm $DOCKER_USERNAME/$DOCKER_IMAGE_TITLE npm -v
+      - docker run --rm $DOCKER_USERNAME/$DOCKER_IMAGE_TITLE make -v
+      - docker run --rm $DOCKER_USERNAME/$DOCKER_IMAGE_TITLE ant -version
+      - docker run --rm $DOCKER_USERNAME/$DOCKER_IMAGE_TITLE php -v
+      - docker run --rm $DOCKER_USERNAME/$DOCKER_IMAGE_TITLE composer --version
